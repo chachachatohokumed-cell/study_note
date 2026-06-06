@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>講義ノート</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=IBM+Plex+Mono:wght@300;400&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--border:#2a2d3a;
+    --accent:#7eb8a4;--accent2:#c4a96b;--text:#dde1ec;--text-muted:#6b7080;
+    --text-dim:#9099b0;--radius:8px;
+    --mono:'IBM Plex Mono',monospace;--serif:'Noto Serif JP',serif;--sans:'Zen Kaku Gothic New',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;min-height:100vh;display:flex;flex-direction:column;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;gap:8px;}
+  .logo{font-family:var(--serif);font-size:.95rem;letter-spacing:.1em;color:var(--accent);white-space:nowrap;}
+  .logo-theme{color:var(--accent2);font-size:.8rem;margin-left:8px;letter-spacing:.06em;}
+  nav{display:flex;gap:3px;flex-shrink:0;}
+  nav button{background:none;border:none;cursor:pointer;padding:7px 13px;border-radius:6px;color:var(--text-muted);font-family:var(--sans);font-size:.8rem;letter-spacing:.05em;transition:all .2s;white-space:nowrap;}
+  nav button:hover{color:var(--text);background:var(--surface2);}
+  nav button.active{color:var(--accent);background:var(--surface2);border:1px solid var(--border);}
+  main{flex:1;padding:24px 20px;max-width:860px;margin:0 auto;width:100%;}
+  .section{display:none;animation:fadeIn .25s ease;}
+  .section.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .section-title{font-family:var(--serif);font-size:1.2rem;font-weight:400;color:var(--accent);margin-bottom:5px;letter-spacing:.08em;}
+  .section-sub{color:var(--text-muted);font-size:.78rem;letter-spacing:.04em;margin-bottom:24px;line-height:1.6;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .card-label{font-size:.68rem;letter-spacing:.14em;color:var(--accent2);text-transform:uppercase;margin-bottom:10px;font-family:var(--mono);}
+  .theme-banner{background:linear-gradient(135deg,#1a2a24 0%,#1e2029 100%);border:1px solid var(--accent);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;}
+  .theme-banner-icon{font-size:1.8rem;flex-shrink:0;margin-top:2px;}
+  .theme-banner-name{font-family:var(--serif);font-size:1.05rem;color:var(--accent);margin-bottom:3px;}
+  .theme-banner-memo{font-size:.8rem;color:var(--text-dim);line-height:1.7;white-space:pre-wrap;}
+  label{display:block;font-size:.78rem;color:var(--text-dim);margin-bottom:5px;letter-spacing:.04em;}
+  input[type=text],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:.88rem;padding:10px 13px;outline:none;transition:border-color .2s;resize:vertical;}
+  input[type=text]:focus,textarea:focus,select:focus{border-color:var(--accent);}
+  textarea{min-height:90px;line-height:1.7;}
+  .form-row{margin-bottom:16px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-grid-icon{display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:end;}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:.82rem;letter-spacing:.05em;transition:all .2s;}
+  .btn-primary{background:var(--accent);color:#0e0f13;font-weight:700;}
+  .btn-primary:hover{background:#8fcbb6;}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-ghost{background:none;color:var(--text-muted);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-dim);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center;}
+  .sync-status{font-family:var(--mono);font-size:.7rem;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);}
+  .sync-status.synced{color:var(--accent);border-color:var(--accent);}
+  .sync-status.syncing{color:var(--accent2);border-color:var(--accent2);}
+  .sync-status.error{color:#c47a6b;border-color:#c47a6b;}
+  .sync-status.local{color:var(--text-muted);}
+  .lecture-area{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);min-height:300px;max-height:480px;overflow-y:auto;padding:20px;margin-bottom:14px;display:flex;flex-direction:column;gap:16px;}
+  .lecture-block{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:16px 18px;}
+  .lecture-block-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .lecture-step-num{font-family:var(--mono);font-size:.7rem;background:var(--accent);color:#0e0f13;padding:3px 10px;border-radius:20px;}
+  .lecture-block-title{font-family:var(--serif);font-size:.98rem;color:var(--accent);}
+  .lecture-block-body{line-height:1.85;font-size:.88rem;white-space:pre-wrap;word-break:break-word;}
+  .lecture-block.loading .lecture-block-body{color:var(--text-muted);font-style:italic;}
+  .qa-block{display:flex;flex-direction:column;gap:5px;}
+  .qa-q{align-self:flex-end;max-width:88%;background:var(--accent);color:#0e0f13;padding:10px 14px;border-radius:8px;font-size:.85rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+  .qa-q-label,.qa-a-label{font-size:.65rem;color:var(--text-muted);font-family:var(--mono);letter-spacing:.1em;}
+  .qa-q-label{align-self:flex-end;}
+  .qa-a{align-self:flex-start;max-width:92%;background:var(--surface);border:1px solid var(--border);padding:12px 15px;border-radius:8px;font-size:.85rem;line-height:1.8;white-space:pre-wrap;word-break:break-word;}
+  .qa-a.loading{color:var(--text-muted);font-style:italic;}
+  .lecture-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .qa-input-wrap{display:none;margin-top:12px;}
+  .qa-input-wrap.active{display:block;}
+  .qa-input-row{display:flex;gap:8px;align-items:flex-end;}
+  .qa-input-row textarea{min-height:48px;max-height:140px;}
+  .send-btn{flex-shrink:0;width:44px;height:44px;border-radius:8px;border:none;background:var(--accent);color:#0e0f13;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+  .send-btn:hover{background:#8fcbb6;}
+  .send-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .lecture-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
+  .lecture-badge{font-family:var(--mono);font-size:.7rem;padding:4px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+  .record-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .record-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+  .record-card h3{font-family:var(--serif);font-size:.92rem;font-weight:400;color:var(--accent);margin-bottom:10px;}
+  .record-card textarea{min-height:260px;font-size:.82rem;line-height:1.9;}
+  .record-hint{font-size:.7rem;color:var(--text-muted);margin-top:6px;}
+  .profile-bar{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 16px;margin-bottom:18px;display:flex;gap:20px;flex-wrap:wrap;}
+  .profile-bar span{font-size:.76rem;color:var(--text-muted);font-family:var(--mono);}
+  .profile-bar span b{color:var(--text);font-weight:400;}
+  .alert{padding:11px 15px;border-radius:6px;font-size:.8rem;margin-bottom:16px;border:1px solid;line-height:1.6;}
+  .alert-info{background:#1a2a26;border-color:var(--accent);color:var(--accent);}
+  .alert-warn{background:#2a2218;border-color:var(--accent2);color:var(--accent2);}
+  .lecture-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);font-size:.82rem;gap:12px;padding:36px 0;text-align:center;}
+  .lecture-empty .icon{font-size:2.2rem;opacity:.4;}
+  .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+  .notion-config-note{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:20px;font-size:.78rem;color:var(--text-dim);line-height:1.8;}
+  .notion-config-note code{font-family:var(--mono);color:var(--accent2);background:#2a2218;padding:1px 6px;border-radius:3px;font-size:.8em;}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:var(--surface);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  @media(max-width:600px){
+    .form-grid{grid-template-columns:1fr;}
+    .record-grid{grid-template-columns:1fr;}
+    header{padding:10px 14px;}
+    main{padding:16px 14px;}
+    nav button{padding:6px 9px;font-size:.74rem;}
+    .theme-banner{flex-direction:column;gap:8px;}
+    .lecture-area{max-height:380px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">講義ノート<span class="logo-theme" id="header-theme"></span></div>
+  <nav>
+    <button class="active" onclick="showSection('profile')">設定</button>
+    <button onclick="showSection('lecture')">講義</button>
+    <button onclick="showSection('record')">学習記録</button>
+  </nav>
+</header>
+<main>
+
+  <!-- ① 設定 -->
+  <section id="section-profile" class="section active">
+    <div class="section-title">設定</div>
+    <div class="section-sub">初回のみ入力します。HTMLを複製してテーマごとに書き換えてください。</div>
+    <div class="notion-config-note">
+      📡 <b>Notion同期の設定</b>（HTMLファイルをテキストエディタで開き、以下の3箇所を書き換えてください）<br>
+      <code>YOUR_NOTION_API_KEY</code> → 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
+      <code>YOUR_SETTINGS_DB_ID</code> → 377433f486ea8076bb9eda9e48675d36
+      <code>YOUR_RECORD_DB_ID</code> &nbsp;→ 377433f486ea809dbe1cdb33c3ea5074
+    </div>
+    <div class="card">
+      <div class="card-label">このツールのテーマ</div>
+      <div class="form-grid-icon">
+        <div class="form-row"><label>アイコン</label><input type="text" id="p-icon" placeholder="📚" maxlength="2"></div>
+        <div class="form-row"><label>テーマ名</label><input type="text" id="p-theme" placeholder="例：株式投資　競馬　統計学"></div>
+      </div>
+      <div class="form-row"><label>テーマメモ（目的・学びたいこと）</label><textarea id="p-theme-memo" placeholder="例：&#10;・株式投資の基礎から学ぶ&#10;・テクニカル分析を理解したい"></textarea></div>
+    </div>
+    <hr class="divider">
+    <div class="card">
+      <div class="card-label">あなたのプロフィール</div>
+      <div class="form-grid">
+        <div class="form-row"><label>お名前（呼び方）</label><input type="text" id="p-name" placeholder="例：田中"></div>
+        <div class="form-row"><label>専門・職種</label><input type="text" id="p-job" placeholder="例：外科医 / 大学院生"></div>
+      </div>
+      <div class="form-row"><label>学習の主な目的</label><input type="text" id="p-goal" placeholder="例：統計・研究手法を体系的に理解したい"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">講義スタイルの設定</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>専門用語への対応</label>
+          <select id="p-jargon">
+            <option value="plain">必ず平易な言葉で言い換える</option>
+            <option value="both">専門用語＋平易な説明を併記</option>
+            <option value="keep">専門用語はそのまま使う</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>説明の深さ</label>
+          <select id="p-depth">
+            <option value="basic">基礎から丁寧に</option>
+            <option value="mid" selected>概念を理解できる程度に</option>
+            <option value="deep">深く詳細に</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row"><label>具体例の分野</label><input type="text" id="p-example" placeholder="例：外科手術、臨床研究、医療データ"></div>
+      <div class="form-row"><label>その他・補足指示（任意）</label><textarea id="p-note" placeholder="例：1項目を短めに、など"></textarea></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveProfile()">保存して講義へ →</button>
+      <span id="profile-sync-status" class="sync-status local">未同期</span>
+    </div>
+    <div id="profile-saved-msg" style="display:none;margin-top:14px;" class="alert alert-info"></div>
+  </section>
+
+  <!-- ② 講義 -->
+  <section id="section-lecture" class="section">
+    <div class="section-title">講義</div>
+    <div class="section-sub">AIが1項目ずつ講義します。「次へ進む」で進み、途中で質問もできます。</div>
+    <div id="theme-banner" class="theme-banner" style="display:none;">
+      <div class="theme-banner-icon" id="banner-icon">📚</div>
+      <div><div class="theme-banner-name" id="banner-name"></div><div class="theme-banner-memo" id="banner-memo"></div></div>
+    </div>
+    <div id="profile-bar-lecture" class="profile-bar" style="display:none;"></div>
+    <div id="no-profile-warn" class="alert alert-warn" style="display:none;">設定が未完了です。「設定」タブでプロフィールとテーマを入力してください。</div>
+    <div class="lecture-meta">
+      <div id="lecture-badge" class="lecture-badge">講義：未開始</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="font-size:.7rem;color:var(--text-muted);font-family:var(--mono);" id="step-count">0 ステップ</div>
+        <button class="btn btn-ghost" style="padding:5px 11px;font-size:.74rem;" onclick="resetLecture()">最初から</button>
+      </div>
+    </div>
+    <div class="lecture-area" id="lecture-area">
+      <div class="lecture-empty" id="lecture-empty">
+        <div class="icon">🎓</div>
+        <div>「講義を始める」を押すと、AIがテーマに沿って<br>1項目ずつ講義を進めます。</div>
+        <button class="btn btn-primary" onclick="startLecture()">講義を始める</button>
+      </div>
+    </div>
+    <div id="lecture-controls" class="lecture-controls" style="display:none;">
+      <button class="btn btn-primary" id="next-btn" onclick="nextStep()">次へ進む →</button>
+      <button class="btn btn-secondary" id="ask-btn" onclick="toggleAsk()">この項目について質問する</button>
+    </div>
+    <div id="qa-input-wrap" class="qa-input-wrap">
+      <label style="margin-bottom:8px;">質問を入力してください（解決したら「次へ進む」で講義に戻れます）</label>
+      <div class="qa-input-row">
+        <textarea id="qa-input" placeholder="例：今の説明の〇〇がよくわかりません…（Enterで送信）" onkeydown="handleQaKey(event)"></textarea>
+        <button class="send-btn" id="qa-send-btn" onclick="askQuestion()">↑</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 学習記録 -->
+  <section id="section-record" class="section">
+    <div class="section-title">学習記録</div>
+    <div class="section-sub">自由にメモを書いてください。「保存」でNotionに同期されます。</div>
+    <div id="theme-banner-record" class="theme-banner" style="display:none;margin-bottom:20px;">
+      <div class="theme-banner-icon" id="banner-icon-record">📚</div>
+      <div><div class="theme-banner-name" id="banner-name-record"></div><div class="theme-banner-memo" id="banner-memo-record"></div></div>
+    </div>
+    <div class="record-grid">
+      <div class="record-card">
+        <h3>📖 これまでに学んだこと</h3>
+        <textarea id="record-learned" placeholder="例：&#10;・移動平均線の読み方&#10;　→ 短期・中期・長期のクロスでトレンドを判断"></textarea>
+        <div class="record-hint">講義で学んだ要点をメモしておきましょう</div>
+      </div>
+      <div class="record-card">
+        <h3>🔭 次に学ぶこと</h3>
+        <textarea id="record-next" placeholder="例：&#10;・MACD・RSIの使い方&#10;・決算書の読み方"></textarea>
+        <div class="record-hint">次回の講義で扱いたいことをメモしておきましょう</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveRecord()">保存 + Notionに同期</button>
+      <button class="btn btn-ghost" onclick="loadRecordFromNotion()">Notionから読込</button>
+      <button class="btn btn-ghost" onclick="copyRecord()">全文をコピー</button>
+      <span id="record-sync-status" class="sync-status local">未同期</span>
+    </div>
+    <div id="record-saved-msg" style="display:none;margin-top:12px;" class="alert alert-info"></div>
+  </section>
+
+</main>
+<script>
+// =====================================================================
+// ★ Notion設定 ── テキストエディタでこの3行を書き換えてください
+// =====================================================================
+const NOTION_API_KEY  = 'YOUR_NOTION_API_KEY';
+const SETTINGS_DB_ID  = 'YOUR_SETTINGS_DB_ID';
+const RECORD_DB_ID    = 'YOUR_RECORD_DB_ID';
+// =====================================================================
+
+const NOTION_VERSION  = '2022-06-28';
+const USE_NOTION      = NOTION_API_KEY !== 'YOUR_NOTION_API_KEY';
+const LOCAL_PROFILE   = 'lct_v2_profile';
+const LOCAL_RECORD    = 'lct_v2_record';
+const LOCAL_LECTURE   = 'lct_v2_lecture';
+
+let lectureHistory=[], stepCount=0, isLoading=false, askMode=false;
+
+(function init(){
+  loadProfileLocal(); loadRecordLocal(); loadLectureLocal(); updateHeaderTheme();
+  if(USE_NOTION){ loadProfileFromNotion(); loadRecordFromNotion(); }
+})();
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  ['profile','lecture','record'].forEach((n,i)=>{if(n===id)document.querySelectorAll('nav button')[i].classList.add('active');});
+  if(id==='lecture') refreshLectureHeader();
+  if(id==='record')  refreshRecordBanner();
+}
+
+function saveProfile(){
+  const p=getProfileValues();
+  if(!p.name){alert('お名前を入力してください。');return;}
+  if(!p.theme){alert('テーマ名を入力してください。');return;}
+  saveProfileLocal(p); updateHeaderTheme();
+  const msg=document.getElementById('profile-saved-msg');
+  if(USE_NOTION){
+    setSyncStatus('profile-sync-status','syncing','同期中…');
+    saveProfileToNotion(p).then(()=>{
+      setSyncStatus('profile-sync-status','synced','Notion同期済');
+      msg.textContent='設定を保存し、Notionに同期しました。';
+      msg.style.display='block';
+      setTimeout(()=>{msg.style.display='none';showSection('lecture');},1400);
+    }).catch(()=>{
+      setSyncStatus('profile-sync-status','error','同期失敗（ローカル保存済）');
+      msg.textContent='ローカルに保存しました（Notion同期に失敗しました）。';
+      msg.style.display='block';
+      setTimeout(()=>{msg.style.display='none';showSection('lecture');},1800);
+    });
+  } else {
+    msg.textContent='設定を保存しました（Notion未設定のためローカル保存）。';
+    msg.style.display='block';
+    setTimeout(()=>{msg.style.display='none';showSection('lecture');},1200);
+  }
+}
+
+function getProfileValues(){
+  return{icon:document.getElementById('p-icon').value.trim()||'📚',theme:document.getElementById('p-theme').value.trim(),themeMemo:document.getElementById('p-theme-memo').value.trim(),name:document.getElementById('p-name').value.trim(),job:document.getElementById('p-job').value.trim(),goal:document.getElementById('p-goal').value.trim(),jargon:document.getElementById('p-jargon').value,depth:document.getElementById('p-depth').value,example:document.getElementById('p-example').value.trim(),note:document.getElementById('p-note').value.trim()};
+}
+function saveProfileLocal(p){try{localStorage.setItem(LOCAL_PROFILE,JSON.stringify(p));}catch(e){}}
+function loadProfileLocal(){
+  try{
+    const raw=localStorage.getItem(LOCAL_PROFILE);if(!raw)return;const p=JSON.parse(raw);
+    document.getElementById('p-icon').value=p.icon||'📚';document.getElementById('p-theme').value=p.theme||'';document.getElementById('p-theme-memo').value=p.themeMemo||'';document.getElementById('p-name').value=p.name||'';document.getElementById('p-job').value=p.job||'';document.getElementById('p-goal').value=p.goal||'';document.getElementById('p-jargon').value=p.jargon||'plain';document.getElementById('p-depth').value=p.depth||'mid';document.getElementById('p-example').value=p.example||'';document.getElementById('p-note').value=p.note||'';
+  }catch(e){}
+}
+function getProfile(){try{const r=localStorage.getItem(LOCAL_PROFILE);return r?JSON.parse(r):null;}catch(e){return null;}}
+function updateHeaderTheme(){const p=getProfile();const el=document.getElementById('header-theme');if(p&&p.theme){el.textContent=`｜${p.icon||'📚'} ${p.theme}`;document.title=`講義ノート｜${p.theme}`;}else el.textContent='';}
+function refreshLectureHeader(){
+  const p=getProfile();const bar=document.getElementById('profile-bar-lecture');const warn=document.getElementById('no-profile-warn');const banner=document.getElementById('theme-banner');
+  if(!p||!p.name){bar.style.display='none';warn.style.display='block';banner.style.display='none';return;}
+  warn.style.display='none';
+  if(p.theme){banner.style.display='flex';document.getElementById('banner-icon').textContent=p.icon||'📚';document.getElementById('banner-name').textContent=p.theme;document.getElementById('banner-memo').textContent=p.themeMemo||'';}else banner.style.display='none';
+  bar.style.display='flex';bar.innerHTML=`<span>名前：<b>${esc(p.name)}</b></span><span>専門：<b>${esc(p.job||'未設定')}</b></span><span>目的：<b>${esc(p.goal||'未設定')}</b></span><span>スタイル：<b>${depthLabel(p.depth)}/${jargonLabel(p.jargon)}</b></span>`;
+}
+function refreshRecordBanner(){const p=getProfile();const banner=document.getElementById('theme-banner-record');if(p&&p.theme){banner.style.display='flex';document.getElementById('banner-icon-record').textContent=p.icon||'📚';document.getElementById('banner-name-record').textContent=p.theme;document.getElementById('banner-memo-record').textContent=p.themeMemo||'';}else banner.style.display='none';}
+function depthLabel(v){return{basic:'基礎から',mid:'概念理解',deep:'深く詳細に'}[v]||v;}
+function jargonLabel(v){return{plain:'平易言換',both:'用語+解説',keep:'用語そのまま'}[v]||v;}
+
+async function notionFetch(endpoint,method,body){
+  const res=await fetch(`https://api.notion.com${endpoint}`,{method,headers:{'Content-Type':'application/json','Authorization':`Bearer ${NOTION_API_KEY}`,'Notion-Version':NOTION_VERSION},body:body?JSON.stringify(body):undefined});
+  if(!res.ok){const e=await res.text();throw new Error(e);}
+  return res.json();
+}
+async function saveProfileToNotion(p){
+  const content=JSON.stringify(p);
+  const search=await notionFetch(`/v1/databases/${SETTINGS_DB_ID}/query`,'POST',{filter:{property:'Name',title:{equals:'profile'}}});
+  const props={Name:{title:[{text:{content:'profile'}}]},Content:{rich_text:[{text:{content:content.slice(0,1800)}}]},UpdatedAt:{date:{start:new Date().toISOString()}}};
+  if(search.results&&search.results.length>0){await notionFetch(`/v1/pages/${search.results[0].id}`,'PATCH',{properties:props});}
+  else{await notionFetch('/v1/pages','POST',{parent:{database_id:SETTINGS_DB_ID},properties:props});}
+}
+async function loadProfileFromNotion(){
+  try{
+    const search=await notionFetch(`/v1/databases/${SETTINGS_DB_ID}/query`,'POST',{filter:{property:'Name',title:{equals:'profile'}}});
+    if(!search.results||search.results.length===0)return;
+    const raw=search.results[0].properties?.Content?.rich_text?.[0]?.plain_text;
+    if(!raw)return;
+    const p=JSON.parse(raw);saveProfileLocal(p);loadProfileLocal();updateHeaderTheme();
+    setSyncStatus('profile-sync-status','synced','Notion同期済');
+  }catch(e){setSyncStatus('profile-sync-status','error','Notion読込失敗');}
+}
+
+function buildSystemPrompt(){
+  const p=getProfile();
+  let sp='あなたは個人向けの優秀な講師です。学習者に対して、テーマを体系的に、1項目ずつ順序立てて講義してください。';
+  if(p){
+    if(p.theme)     sp+=`\n講義テーマは「${p.theme}」です。`;
+    if(p.themeMemo) sp+=`\nテーマの目的・概要：${p.themeMemo}`;
+    if(p.name)      sp+=`\n学習者：${p.name}、専門：${p.job||'未設定'}`;
+    if(p.goal)      sp+=`\n学習目的：${p.goal}`;
+    sp+=`\n説明の深さ：${depthLabel(p.depth)}`;
+    if(p.jargon==='plain') sp+='\n専門用語は必ず平易な言葉に言い換えてください。';
+    if(p.jargon==='both')  sp+='\n専門用語には括弧内に平易な説明を添えてください。';
+    if(p.example)   sp+=`\n具体例は「${p.example}」の分野から引いてください。`;
+    if(p.note)      sp+=`\n追加指示：${p.note}`;
+  }
+  sp+=`\n\n【講義の進め方・厳守事項】\n- 1回の発言では「1つの項目」だけを講義してください。\n- 各発言は必ず「### 項目タイトル」で始め、その後に講義内容を書いてください。\n- 学習者が「次へ進む」と言ったら次の項目に進んでください。同じ内容を繰り返さないこと。\n- 学習者が質問したらその質問にだけ答えてください（次の項目には進まない）。\n- 全体の流れの中で今が何番目かを意識し、体系的に進めてください。\n- 回答は日本語で。`;
+  return sp;
+}
+
+function startLecture(){
+  const p=getProfile();if(!p||!p.name){showSection('profile');return;}
+  lectureHistory=[];stepCount=0;
+  document.getElementById('lecture-area').innerHTML='';
+  document.getElementById('lecture-controls').style.display='flex';
+  sendToAI('講義を始めてください。最初の項目からお願いします。','lecture');
+}
+function nextStep(){closeAsk();sendToAI('次へ進んでください。','lecture');}
+function toggleAsk(){askMode=!askMode;const wrap=document.getElementById('qa-input-wrap');wrap.classList.toggle('active',askMode);if(askMode)document.getElementById('qa-input').focus();}
+function closeAsk(){askMode=false;document.getElementById('qa-input-wrap').classList.remove('active');}
+function handleQaKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();askQuestion();}}
+function askQuestion(){const input=document.getElementById('qa-input');const text=input.value.trim();if(!text)return;input.value='';sendToAI(text,'qa');}
+
+async function sendToAI(userText,type){
+  if(isLoading)return;isLoading=true;setControlsDisabled(true);
+  const area=document.getElementById('lecture-area');
+  if(type==='qa'){
+    const qWrap=document.createElement('div');qWrap.className='qa-block';
+    qWrap.innerHTML=`<div class="qa-q-label">あなたの質問</div><div class="qa-q">${esc(userText)}</div>`;
+    area.appendChild(qWrap);area.scrollTop=area.scrollHeight;
+  }
+  lectureHistory.push({role:'user',content:userText});
+  let loadingEl=document.createElement('div');
+  if(type==='lecture'){loadingEl.className='lecture-block loading';loadingEl.innerHTML='<div class="lecture-block-body">講義を準備しています…</div>';}
+  else{loadingEl.className='qa-a loading';loadingEl.innerHTML='<div class="qa-a-label" style="margin-bottom:4px;">講師</div>回答を考えています…';}
+  area.appendChild(loadingEl);area.scrollTop=area.scrollHeight;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:buildSystemPrompt(),messages:lectureHistory})});
+    const data=await res.json();
+    const reply=data.content?.map(c=>c.text||'').join('')||'（応答を取得できませんでした）';
+    lectureHistory.push({role:'assistant',content:reply});
+    loadingEl.remove();renderReply(reply,type);
+    if(type==='lecture'){stepCount++;updateStepCount();}
+    saveLectureLocal();
+  }catch(err){
+    loadingEl.remove();
+    const errEl=document.createElement('div');errEl.className='lecture-block';
+    errEl.innerHTML=`<div class="lecture-block-body" style="color:var(--accent2);">エラーが発生しました。しばらくしてから再試行してください。</div>`;
+    area.appendChild(errEl);
+  }
+  isLoading=false;setControlsDisabled(false);area.scrollTop=area.scrollHeight;
+}
+
+function renderReply(reply,type){
+  const area=document.getElementById('lecture-area');
+  if(type==='lecture'){
+    let title=`項目 ${stepCount+1}`,body=reply;
+    const m=reply.match(/^\s*#{1,4}\s*(.+)$/m);
+    if(m){title=m[1].trim();body=reply.replace(m[0],'').trim();}
+    const block=document.createElement('div');block.className='lecture-block';
+    block.innerHTML=`<div class="lecture-block-head"><span class="lecture-step-num">STEP ${stepCount+1}</span><span class="lecture-block-title">${esc(title)}</span></div><div class="lecture-block-body">${esc(body)}</div>`;
+    area.appendChild(block);
+  } else {
+    const ans=document.createElement('div');ans.className='qa-block';
+    ans.innerHTML=`<div class="qa-a-label">講師</div><div class="qa-a">${esc(reply)}</div>`;
+    area.appendChild(ans);
+  }
+}
+function setControlsDisabled(d){document.getElementById('next-btn').disabled=d;document.getElementById('ask-btn').disabled=d;document.getElementById('qa-send-btn').disabled=d;}
+function updateStepCount(){document.getElementById('step-count').textContent=`${stepCount} ステップ`;document.getElementById('lecture-badge').textContent=stepCount>0?`講義中（${stepCount}項目目）`:'講義：未開始';}
+function resetLecture(){
+  if(!confirm('講義を最初からやり直します。よろしいですか？'))return;
+  lectureHistory=[];stepCount=0;closeAsk();
+  document.getElementById('lecture-controls').style.display='none';
+  document.getElementById('lecture-area').innerHTML=`<div class="lecture-empty" id="lecture-empty"><div class="icon">🎓</div><div>「講義を始める」を押すと、AIがテーマに沿って<br>1項目ずつ講義を進めます。</div><button class="btn btn-primary" onclick="startLecture()">講義を始める</button></div>`;
+  updateStepCount();try{localStorage.removeItem(LOCAL_LECTURE);}catch(e){}
+}
+function saveLectureLocal(){try{localStorage.setItem(LOCAL_LECTURE,JSON.stringify({history:lectureHistory,step:stepCount}));}catch(e){}}
+function loadLectureLocal(){
+  try{
+    const raw=localStorage.getItem(LOCAL_LECTURE);if(!raw)return;const d=JSON.parse(raw);
+    if(!d.history||d.history.length===0)return;lectureHistory=d.history;stepCount=d.step||0;
+    const area=document.getElementById('lecture-area');area.innerHTML='';
+    document.getElementById('lecture-controls').style.display='flex';
+    let si=0;
+    for(let i=0;i<lectureHistory.length;i++){
+      const m=lectureHistory[i];
+      if(m.role==='user'){
+        if(!/^(次へ|講義を始め)/.test(m.content)){
+          area.insertAdjacentHTML('beforeend',`<div class="qa-block"><div class="qa-q-label">あなたの質問</div><div class="qa-q">${esc(m.content)}</div></div>`);
+        }
+      } else {
+        const prev=lectureHistory[i-1];
+        const isQa=prev&&!/^(次へ|講義を始め)/.test(prev.content);
+        if(isQa){area.insertAdjacentHTML('beforeend',`<div class="qa-block"><div class="qa-a-label">講師</div><div class="qa-a">${esc(m.content)}</div></div>`);}
+        else{
+          si++;let title=`項目 ${si}`,body=m.content;
+          const mt=m.content.match(/^\s*#{1,4}\s*(.+)$/m);if(mt){title=mt[1].trim();body=m.content.replace(mt[0],'').trim();}
+          area.insertAdjacentHTML('beforeend',`<div class="lecture-block"><div class="lecture-block-head"><span class="lecture-step-num">STEP ${si}</span><span class="lecture-block-title">${esc(title)}</span></div><div class="lecture-block-body">${esc(body)}</div></div>`);
+        }
+      }
+    }
+    updateStepCount();area.scrollTop=area.scrollHeight;
+  }catch(e){}
+}
+
+function saveRecord(){
+  const data={learned:document.getElementById('record-learned').value,next:document.getElementById('record-next').value,saved:new Date().toLocaleString('ja-JP')};
+  try{localStorage.setItem(LOCAL_RECORD,JSON.stringify(data));}catch(e){}
+  const msg=document.getElementById('record-saved-msg');
+  if(USE_NOTION){
+    setSyncStatus('record-sync-status','syncing','同期中…');
+    saveRecordToNotion(data).then(()=>{setSyncStatus('record-sync-status','synced','Notion同期済');msg.textContent=`保存しNotionに同期しました（${data.saved}）`;msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2500);})
+    .catch(()=>{setSyncStatus('record-sync-status','error','同期失敗（ローカル保存済）');msg.textContent='ローカルに保存しました（Notion同期失敗）';msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2500);});
+  } else {msg.textContent=`保存しました（${data.saved}）`;msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2000);}
+}
+async function saveRecordToNotion(data){
+  const p=getProfile();const key=p&&p.theme?`record_${p.theme}`:'record';
+  const search=await notionFetch(`/v1/databases/${RECORD_DB_ID}/query`,'POST',{filter:{property:'Name',title:{equals:key}}});
+  const props={Name:{title:[{text:{content:key}}]},Learned:{rich_text:[{text:{content:data.learned.slice(0,1800)}}]},Next:{rich_text:[{text:{content:data.next.slice(0,1800)}}]},UpdatedAt:{date:{start:new Date().toISOString()}}};
+  if(search.results&&search.results.length>0){await notionFetch(`/v1/pages/${search.results[0].id}`,'PATCH',{properties:props});}
+  else{await notionFetch('/v1/pages','POST',{parent:{database_id:RECORD_DB_ID},properties:props});}
+}
+async function loadRecordFromNotion(){
+  const msg=document.getElementById('record-saved-msg');
+  try{
+    setSyncStatus('record-sync-status','syncing','読込中…');
+    const p=getProfile();const key=p&&p.theme?`record_${p.theme}`:'record';
+    const search=await notionFetch(`/v1/databases/${RECORD_DB_ID}/query`,'POST',{filter:{property:'Name',title:{equals:key}}});
+    if(!search.results||search.results.length===0){setSyncStatus('record-sync-status','local','Notionにデータなし');return;}
+    const props=search.results[0].properties;
+    const learned=props?.Learned?.rich_text?.[0]?.plain_text||'';
+    const next=props?.Next?.rich_text?.[0]?.plain_text||'';
+    document.getElementById('record-learned').value=learned;document.getElementById('record-next').value=next;
+    try{localStorage.setItem(LOCAL_RECORD,JSON.stringify({learned,next,saved:new Date().toLocaleString('ja-JP')}));}catch(e){}
+    setSyncStatus('record-sync-status','synced','Notion同期済');msg.textContent='Notionから読み込みました。';msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2000);
+  }catch(e){setSyncStatus('record-sync-status','error','読込失敗');msg.textContent='Notionからの読込に失敗しました。';msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2500);}
+}
+function loadRecordLocal(){try{const raw=localStorage.getItem(LOCAL_RECORD);if(!raw)return;const d=JSON.parse(raw);document.getElementById('record-learned').value=d.learned||'';document.getElementById('record-next').value=d.next||'';}catch(e){}}
+function copyRecord(){const p=getProfile();const learned=document.getElementById('record-learned').value;const next=document.getElementById('record-next').value;const header=p&&p.theme?`【テーマ：${p.theme}】\n`:'';navigator.clipboard.writeText(`${header}【これまでに学んだこと】\n${learned}\n\n【次に学ぶこと】\n${next}`).then(()=>{const msg=document.getElementById('record-saved-msg');msg.textContent='クリップボードにコピーしました。';msg.style.display='block';setTimeout(()=>{msg.style.display='none';},1800);}).catch(()=>alert('コピーに失敗しました。'));}
+
+function setSyncStatus(id,cls,text){const el=document.getElementById(id);if(!el)return;el.className=`sync-status ${cls}`;el.textContent=text;}
+function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');}
+</script>
+</body>
+</html>
